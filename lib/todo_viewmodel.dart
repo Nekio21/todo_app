@@ -5,6 +5,7 @@ import 'package:hive/hive.dart';
 import 'package:todo_app/app_database.dart';
 import 'package:todo_app/notification_service.dart';
 import 'package:todo_app/todo.dart';
+import 'package:todo_app/weather.dart';
 import 'package:todo_app/weather_service.dart';
 
 import 'error_msg.dart';
@@ -32,6 +33,9 @@ class TodoViewModel extends ChangeNotifier {
   int? _theBestDay;
   int? get theBestDay => _theBestDay;
 
+  Future<Weather?>? _weather;
+  Future<Weather?>? get weather => _weather;
+
   TodoViewModel();
 
   void init() async {
@@ -43,7 +47,7 @@ class TodoViewModel extends ChangeNotifier {
       _database = result;
     }
 
-    await WeatherService.fetchWeather();
+    _weather = WeatherService.fetchWeather();
 
     countHowMany();
     countTheBestDay();
@@ -129,6 +133,10 @@ class TodoViewModel extends ChangeNotifier {
     }
 
     setLoading(false);
+  }
+
+  void setMsg(Message msg){
+    _msgController.add(msg);
   }
 
   void setLoading(bool loading) {

@@ -1,1 +1,1 @@
-enum Message { databaseNotInit, validationError, addedToArchive, addedToDo, updated, deleted }
+enum Message { databaseNotInit, validationError, addedToArchive, addedToDo, updated, deleted, weatherApiNotWork}

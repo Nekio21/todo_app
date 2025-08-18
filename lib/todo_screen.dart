@@ -11,6 +11,7 @@ import 'package:todo_app/error_msg.dart';
 import 'package:todo_app/todo.dart';
 import 'package:todo_app/todo_tile.dart';
 import 'package:todo_app/todo_viewmodel.dart';
+import 'package:todo_app/weather.dart';
 
 import 'app_background.dart';
 import 'app_theme.dart';
@@ -35,13 +36,14 @@ class TodoScreenWidget extends StatefulWidget {
   State<TodoScreenWidget> createState() => _TodoScreenState();
 }
 
-class _TodoScreenState extends State<TodoScreenWidget> {
+class _TodoScreenState extends State<TodoScreenWidget> with WidgetsBindingObserver{
   late final StreamSubscription<Message> _onMsg;
   final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     final vm = context.read<TodoViewModel>();
 
@@ -172,7 +174,20 @@ class _TodoScreenState extends State<TodoScreenWidget> {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(vm.theBestDay != null ? DateFormat.EEEE().format(DateTime(2025, 8, 17).add(Duration(days: vm.theBestDay ?? 0))).tr() : "???", style: AppTextStyle.bodyLarge),
+              Text(
+                vm.theBestDay != null
+                    ? DateFormat.EEEE()
+                          .format(
+                            DateTime(
+                              2025,
+                              8,
+                              17,
+                            ).add(Duration(days: vm.theBestDay ?? 0)),
+                          )
+                          .tr()
+                    : "???",
+                style: AppTextStyle.bodyLarge,
+              ),
               Text("your productive day", style: AppTextStyle.captionBold),
             ],
           ),
@@ -182,28 +197,58 @@ class _TodoScreenState extends State<TodoScreenWidget> {
   }
 
   Widget weatherBar() {
-    return bar(
-      Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            spacing: AppSpacing.small,
-            children: [
-              Icon(Icons.sunny, size: 48, color: AppTheme.onSurface),
-              Text("24°C", style: AppTextStyle.bodyLarge),
-            ],
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("odczuwalna: 21°C", style: AppTextStyle.captionRegular),
-              Text("opady: brak", style: AppTextStyle.captionRegular),
-              Text("zachmurzenie: duże", style: AppTextStyle.captionRegular),
-            ],
-          ),
-        ],
-      ),
+    final vm = context.watch<TodoViewModel>();
+
+    return FutureBuilder<Weather?>(
+      future: vm.weather,
+      builder: (context, snapshot) {
+        final Weather? weather = snapshot.data;
+
+        if(snapshot.hasError){
+          vm.setMsg(Message.weatherApiNotWork);
+        }
+
+        if (weather != null) {
+          return bar(
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  spacing: AppSpacing.small,
+                  children: [
+                    Image.network(
+                      'https://openweathermap.org/img/wn/${weather.icon}@2x.png',
+                      width: 48,
+                      height: 48,
+                    ),
+                    Text("${weather.temp}°C", style: AppTextStyle.bodyLarge),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "odczuwalna: ${weather.feelTemp}°C",
+                      style: AppTextStyle.captionRegular,
+                    ),
+                    Text(
+                      "opady: ${weather.rain} mm/h",
+                      style: AppTextStyle.captionRegular,
+                    ),
+                    Text(
+                      "zachmurzenie: ${weather.clouds}%",
+                      style: AppTextStyle.captionRegular,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        } else {
+          return SizedBox.shrink();
+        }
+      },
     );
   }
 
@@ -279,12 +324,12 @@ class _TodoScreenState extends State<TodoScreenWidget> {
                           vertical: AppSpacing.small,
                         ),
                       ),
-                      validator: (value){
+                      validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Pole nie może być puste';
                         }
                         return null;
-                      }
+                      },
                     ),
                     SizedBox(height: AppSpacing.small),
                     TextField(
@@ -309,15 +354,18 @@ class _TodoScreenState extends State<TodoScreenWidget> {
                     SizedBox(height: AppSpacing.small),
                     Align(
                       alignment: AlignmentDirectional.centerEnd,
-                      child: DataPicker(validator: (value){
-                        if (value == null || value.isBefore(DateTime.now()) == true) {
-                          return '';
-                        }
-                        return null;
-                      },
-                      onSaved: (value){
-                        deadline = value;
-                      })
+                      child: DataPicker(
+                        validator: (value) {
+                          if (value == null ||
+                              value.isBefore(DateTime.now()) == true) {
+                            return '';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) {
+                          deadline = value;
+                        },
+                      ),
                     ),
                     SizedBox(height: AppSpacing.large),
                     Row(
@@ -401,6 +449,9 @@ class _TodoScreenState extends State<TodoScreenWidget> {
       case Message.deleted:
         msg = "Deleted :)";
         break;
+      case Message.weatherApiNotWork:
+        msg = "Nie działa pobranie z Api pogody";
+        break;
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -411,6 +462,18 @@ class _TodoScreenState extends State<TodoScreenWidget> {
         margin: EdgeInsets.all(16),
       ),
     );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state){
+    super.didChangeAppLifecycleState(state);
+
+    if(state == AppLifecycleState.resumed){
+      final vm = context.read<TodoViewModel>();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        vm.init();
+      });
+    }
   }
 
   @override

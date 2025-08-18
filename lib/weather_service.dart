@@ -1,30 +1,31 @@
 import 'dart:convert';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'package:todo_app/weather.dart';
 
 class WeatherService{
   WeatherService._();
 
-  static Future<void> fetchWeather() async {
+  static Future<Weather?> fetchWeather() async {
     final Position? position= await _getUserLocation();
     if(position == null){
-      return;
+      throw Exception();
     }
 
-    final apiKey = 'TWOJ KLUCZ';
+    final apiKey = dotenv.env['API_KEY'] ?? '';
     final url = Uri.parse(
         'https://api.openweathermap.org/data/2.5/weather?lat=${position.latitude}&lon=${position.longitude}&units=metric&appid=$apiKey');
 
     final http.Response response = await http.get(url);
 
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      print('Temperatura: ${data['main']['temp']}°C');
-      print('Miasto: ${data['name']}');
-    } else {
-      print('Błąd pobierania danych: ${response.statusCode}');
+      final Weather weather = Weather.fromJson(jsonDecode(response.body));
+      return weather;
     }
+
+    throw Exception();
   }
 
   static Future<Position?> _getUserLocation() async {
