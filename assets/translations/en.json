@@ -1,5 +1,39 @@
 {
   "general": {
-    "app_name": "To Do App"
+    "app_name": "To Do App",
+    "no_data": "no data",
+    "success": "success",
+    "productive_day": "most productive day",
+    "archive": "Archive"
+  },
+  "todo": {
+    "add_new": "Add new task",
+    "task_name": "Task name*",
+    "description": "Description",
+    "set_time": "set time*",
+    "field_empty": "Field cannot be empty",
+    "completed": "Completed",
+    "created": "Created",
+    "updated": "Updated To-Do",
+    "deleted": "Deleted To-Do",
+    "added_to_archive": "Added to archive",
+    "restored": "Restored to To-Do"
+  },
+  "actions": {
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "update": "Update"
+  },
+  "weather": {
+    "feels_like": "Feels like",
+    "precipitation": "Precipitation",
+    "cloud_cover": "Cloud cover",
+    "not_working": "Weather API not working"
+  },
+  "errors":{
+    "database_not_initialized": "Database not initialized",
+    "validation_error": "Validation error: not all fields are filled",
+    "delay": "Delay"
   }
 }

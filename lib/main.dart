@@ -1,10 +1,10 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:todo_app/todo_screen.dart';
+import 'package:todo_app/todo/ui/todo_screen.dart';
 
-import 'app_theme.dart';
-import 'notification_service.dart';
+import 'core/ui/app_theme.dart';
+import 'services/notification_service.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,7 +12,7 @@ void main() async{
   await EasyLocalization.ensureInitialized();
   NotificationService.init();
 
-  runApp(EasyLocalization( supportedLocales: [Locale('en'), Locale('pl')], path: 'assets/translations', fallbackLocale: Locale('en'), child: const MyApp(),));
+  runApp(EasyLocalization( supportedLocales: [Locale('en')], path: 'assets/translations', fallbackLocale: Locale('en'), child: const MyApp(),));
 }
 
 class MyApp extends StatelessWidget {

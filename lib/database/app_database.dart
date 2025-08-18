@@ -1,5 +1,5 @@
 import 'package:hive_flutter/adapters.dart';
-import 'package:todo_app/todo.dart';
+import 'package:todo_app/todo/models/todo.dart';
 
 class AppDatabase {
   static bool _initialized = false;

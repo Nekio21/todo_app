@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:todo_app/app_text_style.dart';
+import 'package:todo_app/core/ui/app_text_style.dart';
 
 import 'app_spacing.dart';
 import 'app_theme.dart';
@@ -16,9 +16,9 @@ class AppBackground extends StatelessWidget {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        leading: Icon(Icons.list, size: 32, color: AppTheme.onSurface),
+        leading: const Icon(Icons.list, size: 32, color: AppTheme.onSurface),
         title: Text(name, style: AppTextStyle.headingLarge),
-        actions: [IconButton(onPressed: (){fun?.call();}, icon: Icon(Icons.work_history_rounded))],
+        actions: [IconButton(onPressed: (){fun?.call();}, icon: const Icon(Icons.work_history_rounded))],
       ),
       backgroundColor: AppTheme.onSurface,
       body: SafeArea(
@@ -34,7 +34,7 @@ class AppBackground extends StatelessWidget {
             ),
           ),
           child: Padding(
-            padding: EdgeInsets.all(AppSpacing.large),
+            padding: const EdgeInsets.all(AppSpacing.large),
             child: child,
           ),
         ),

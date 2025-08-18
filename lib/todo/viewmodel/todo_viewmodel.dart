@@ -2,16 +2,16 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:hive/hive.dart';
-import 'package:todo_app/app_database.dart';
-import 'package:todo_app/notification_service.dart';
-import 'package:todo_app/todo.dart';
-import 'package:todo_app/weather.dart';
-import 'package:todo_app/weather_service.dart';
+import 'package:todo_app/database/app_database.dart';
+import 'package:todo_app/services/notification_service.dart';
+import 'package:todo_app/todo/models/todo.dart';
+import 'package:todo_app/weather/models/weather.dart';
+import 'package:todo_app/weather/services/weather_service.dart';
 
-import 'error_msg.dart';
+import '../../core/util/message.dart';
 
 class TodoViewModel extends ChangeNotifier {
-  final _msgController = StreamController<Message>();
+  final StreamController<Message> _msgController = StreamController<Message>();
 
   Stream<Message> get msgStream => _msgController.stream;
 
@@ -28,12 +28,15 @@ class TodoViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   int? _howMany;
+
   int? get howMany => _howMany;
 
   int? _theBestDay;
+
   int? get theBestDay => _theBestDay;
 
   Future<Weather?>? _weather;
+
   Future<Weather?>? get weather => _weather;
 
   TodoViewModel();
@@ -42,7 +45,7 @@ class TodoViewModel extends ChangeNotifier {
     setLoading(true);
     final result = await AppDatabase.init();
     if (result == null) {
-      _msgController.add(Message.databaseNotInit);
+      _msgController.add(Message.databaseNotInitialized);
     } else {
       _database = result;
     }
@@ -57,23 +60,23 @@ class TodoViewModel extends ChangeNotifier {
 
   void save(String? name, String? desc, DateTime? deadline) async {
     if (name == null || name == "" || deadline == null) {
-      _msgController.add(Message.validationError);
+      _msgController.add(Message.validationFailed);
       return;
     }
 
     setLoading(true);
     Todo todo = Todo(
-      name: name,
-      desc: desc,
+      title: name,
+      description: desc,
       deadline: deadline,
-      done: false,
-      createdTime: DateTime.now(),
+      isDone: false,
+      createdAt: DateTime.now(),
     );
     if (_database != null) {
       await _database?.add(todo);
-      NotificationService.scheduleNotification(id: todo.key, title: todo.name, body: todo.desc ?? "", scheduledTime: NotificationService.getNotificationDateTime(deadline));
+      setNotification(todo);
     } else {
-      _msgController.add(Message.databaseNotInit);
+      _msgController.add(Message.databaseNotInitialized);
     }
     setLoading(false);
   }
@@ -82,20 +85,31 @@ class TodoViewModel extends ChangeNotifier {
     setLoading(true);
     todo.toggleDone();
     await todo.save();
-    if(todo.done){
+    if (todo.isDone) {
       NotificationService.cancel(todo.key);
-    }else{
-      NotificationService.scheduleNotification(id: todo.key, title: todo.name, body: todo.desc ?? "", scheduledTime: NotificationService.getNotificationDateTime(todo.deadline));
+    } else {
+      setNotification(todo);
     }
     countHowMany();
     countTheBestDay();
 
-    _msgController.add(todo.done ? Message.addedToArchive : Message.addedToDo);
+    _msgController.add(
+      todo.isDone ? Message.addedToDoToArchive : Message.addedToDo,
+    );
     setLoading(false);
   }
 
+  void setNotification(Todo todo) {
+    NotificationService.scheduleNotification(
+      id: todo.key,
+      title: todo.title,
+      body: todo.description ?? "",
+      scheduledTime: NotificationService.getNotificationDateTime(todo.deadline),
+    );
+  }
+
   void toggleShow(Todo todo) async {
-    todo.toggleShowDesc();
+    todo.toggleShowDescription();
     notifyListeners();
   }
 
@@ -103,7 +117,7 @@ class TodoViewModel extends ChangeNotifier {
     setLoading(true);
     NotificationService.cancel(todo.key);
     await todo.delete();
-    _msgController.add(Message.deleted);
+    _msgController.add(Message.deletedToDo);
     countHowMany();
     countTheBestDay();
     setLoading(false);
@@ -116,26 +130,26 @@ class TodoViewModel extends ChangeNotifier {
     DateTime? deadline,
   ) async {
     if (name == null || name == "" || deadline == null) {
-      _msgController.add(Message.validationError);
+      _msgController.add(Message.validationFailed);
       return;
     }
 
     setLoading(true);
 
     if (_database != null) {
-      original.name = name;
-      original.desc = desc;
+      original.title = name;
+      original.description = desc;
       original.deadline = deadline;
       await original.save();
-      _msgController.add(Message.updated);
+      _msgController.add(Message.updatedToDo);
     } else {
-      _msgController.add(Message.databaseNotInit);
+      _msgController.add(Message.databaseNotInitialized);
     }
 
     setLoading(false);
   }
 
-  void setMsg(Message msg){
+  void setMsg(Message msg) {
     _msgController.add(msg);
   }
 
@@ -149,17 +163,22 @@ class TodoViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void countHowMany(){
-    _howMany = _database?.values.where((todo)=>todo.done).toList().length;
+  void countHowMany() {
+    _howMany = _database?.values.where((todo) => todo.isDone).toList().length;
     notifyListeners();
   }
 
-  void countTheBestDay(){
-    final List<int?> numbers = _database?.values.where((todo)=>todo.done).map((todo)=> todo.doneTime?.weekday).toList() ?? [];
+  void countTheBestDay() {
+    final List<int?> numbers =
+        _database?.values
+            .where((todo) => todo.isDone)
+            .map((todo) => todo.completedAt?.weekday)
+            .toList() ??
+        [];
 
     Map<int, int> counts = {};
     for (int? number in numbers) {
-      if(number == null) continue;
+      if (number == null) continue;
       counts[number] = (counts[number] ?? 0) + 1;
     }
 
@@ -170,7 +189,6 @@ class TodoViewModel extends ChangeNotifier {
     _theBestDay = mostFrequent;
     notifyListeners();
   }
-
 
   @override
   void dispose() {

@@ -13,7 +13,7 @@ class Loader extends StatelessWidget {
       child: Center(
         child: Stack(
           alignment: AlignmentDirectional.center,
-          children: [child,if (isLoading) CircularProgressIndicator()],
+          children: [child, if (isLoading) CircularProgressIndicator()],
         ),
       ),
     );

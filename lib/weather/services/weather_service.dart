@@ -3,20 +3,21 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
-import 'package:todo_app/weather.dart';
+import 'package:todo_app/weather/models/weather.dart';
 
-class WeatherService{
+class WeatherService {
   WeatherService._();
 
   static Future<Weather?> fetchWeather() async {
-    final Position? position= await _getUserLocation();
-    if(position == null){
+    final Position? position = await _getUserLocation();
+    if (position == null) {
       throw Exception();
     }
 
     final apiKey = dotenv.env['API_KEY'] ?? '';
     final url = Uri.parse(
-        'https://api.openweathermap.org/data/2.5/weather?lat=${position.latitude}&lon=${position.longitude}&units=metric&appid=$apiKey');
+      'https://api.openweathermap.org/data/2.5/weather?lat=${position.latitude}&lon=${position.longitude}&units=metric&appid=$apiKey',
+    );
 
     final http.Response response = await http.get(url);
 
@@ -50,11 +51,12 @@ class WeatherService{
     }
 
     LocationSettings locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.high, // replaces desiredAccuracy
-      distanceFilter: 10, // optional, meters
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 10,
     );
 
     return await Geolocator.getCurrentPosition(
-      locationSettings: locationSettings);
+      locationSettings: locationSettings,
+    );
   }
 }

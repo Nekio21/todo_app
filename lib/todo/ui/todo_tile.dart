@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:todo_app/todo.dart';
-import 'package:todo_app/todo_viewmodel.dart';
+import 'package:todo_app/todo/models/todo.dart';
+import 'package:todo_app/todo/viewmodel/todo_viewmodel.dart';
 
-import 'app_spacing.dart';
-import 'app_text_style.dart';
-import 'app_theme.dart';
+import '../../core/ui/app_spacing.dart';
+import '../../core/ui/app_text_style.dart';
+import '../../core/ui/app_theme.dart';
 
 class TodoTile extends StatefulWidget {
   final Todo todo;
@@ -26,16 +26,16 @@ class TodoTile extends StatefulWidget {
 }
 
 class _TodoTileState extends State<TodoTile> {
-  late bool done;
-  late bool clicked;
+  late bool _done;
+  late bool _clicked;
   late Timer _timer;
 
   @override
   void initState() {
     super.initState();
-    done = widget.todo.done;
-    clicked = false;
-    _timer = Timer.periodic(Duration(minutes: 1), (_) {
+    _done = widget.todo.isDone;
+    _clicked = false;
+    _timer = Timer.periodic(const Duration(minutes: 1), (_) {
       setState(() {});
     });
   }
@@ -68,25 +68,25 @@ class _TodoTileState extends State<TodoTile> {
                   transitionBuilder: (child, animation) =>
                       ScaleTransition(scale: animation, child: child),
                   child: IconButton(
-                    key: ValueKey(done),
+                    key: ValueKey(_done),
                     icon: Icon(
-                      done
+                      _done
                           ? Icons.check_box_outlined
                           : Icons.check_box_outline_blank,
                       size: 20,
                       color: AppTheme.onSurface,
                     ),
-                    tooltip: "zrobione ?",
+                    tooltip: "${"todo.completed".tr()}?",
                     onPressed: () async {
-                      if (clicked == false) {
-                        clicked = true;
+                      if (_clicked == false) {
+                        _clicked = true;
                         setState(() {
-                          done = !done;
+                          _done = !_done;
                         });
                         await Future.delayed(Duration(milliseconds: 1000));
                         await widget.vm.toggleDone(widget.todo);
-                        clicked = false;
-                        done = widget.todo.done;
+                        _clicked = false;
+                        _done = widget.todo.isDone;
                       }
                     },
                   ),
@@ -96,11 +96,11 @@ class _TodoTileState extends State<TodoTile> {
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeInOut,
                     style: TextStyle(
-                      decoration: done ? TextDecoration.lineThrough : null,
+                      decoration: _done ? TextDecoration.lineThrough : null,
                     ),
                     child: Text(
-                      key: ValueKey(done),
-                      widget.todo.name,
+                      key: ValueKey(_done),
+                      widget.todo.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       softWrap: false,
@@ -110,7 +110,7 @@ class _TodoTileState extends State<TodoTile> {
                 ),
                 Text(
                   widget.vm.showArchive
-                      ? "done ${DateFormat('dd.MM.yyyy').format(widget.todo.doneTime ?? DateTime.now())}"
+                      ? "${"todo.completed".tr()}: ${DateFormat('dd.MM.yyyy').format(widget.todo.completedAt ?? DateTime.now())}"
                       : getDurationText(
                           widget.todo.getDuration(DateTime.now()),
                         ),
@@ -124,21 +124,24 @@ class _TodoTileState extends State<TodoTile> {
                 curve: Curves.easeInOut,
                 child: Align(
                   alignment: Alignment.centerRight,
-                  heightFactor: widget.todo.showDesc ? 1.0 : 0.0,
+                  heightFactor: widget.todo.showDescription ? 1.0 : 0.0,
                   child: Column(
                     spacing: AppSpacing.small,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Padding(
                         padding: EdgeInsets.only(left: 56),
-                        child: SizedBox(width: double.maxFinite, child:Text(
-                          widget.todo.desc ?? '',
-                          style: AppTextStyle.captionSmall,
-                          textAlign: TextAlign.start,
-                        )),
+                        child: SizedBox(
+                          width: double.maxFinite,
+                          child: Text(
+                            widget.todo.description ?? '',
+                            style: AppTextStyle.captionSmall,
+                            textAlign: TextAlign.start,
+                          ),
+                        ),
                       ),
                       Text(
-                        'created ${DateFormat('dd.MM.yyyy').format(widget.todo.createdTime)}',
+                        '${"todo.created".tr()} ${DateFormat('dd.MM.yyyy').format(widget.todo.createdAt)}',
                         style: AppTextStyle.captionSmall,
                       ),
                       Row(
@@ -154,7 +157,7 @@ class _TodoTileState extends State<TodoTile> {
                               children: [
                                 Icon(Icons.delete, color: AppTheme.onSecondary),
                                 Text(
-                                  "delete",
+                                  "actions.delete".tr(),
                                   style: AppTextStyle.captionSmallBold,
                                 ),
                               ],
@@ -172,7 +175,7 @@ class _TodoTileState extends State<TodoTile> {
                                   color: AppTheme.onSecondary,
                                 ),
                                 Text(
-                                  "edit",
+                                  "actions.edit".tr(),
                                   style: AppTextStyle.captionSmallBold,
                                 ),
                               ],
@@ -195,14 +198,14 @@ class _TodoTileState extends State<TodoTile> {
     final isNegative = duration.isNegative;
     final durationAbs = duration.abs();
 
-    String delay = isNegative ? 'delay' : '';
+    String delay = isNegative ? 'errors.delay'.tr() : '';
 
     if (durationAbs.inDays > 0) {
-      return "$delay ${durationAbs.inDays} dni ${durationAbs.inHours % 24} H ${durationAbs.inMinutes % 60} min";
+      return "$delay ${durationAbs.inDays}d ${durationAbs.inHours % 24}h ${durationAbs.inMinutes % 60}m";
     } else if (durationAbs.inHours > 0) {
-      return "$delay ${durationAbs.inHours % 24} H ${durationAbs.inMinutes % 60} min";
+      return "$delay ${durationAbs.inHours % 24}h ${durationAbs.inMinutes % 60}m";
     } else {
-      return "$delay ${durationAbs.inMinutes % 60} min";
+      return "$delay ${durationAbs.inMinutes % 60}m";
     }
   }
 
