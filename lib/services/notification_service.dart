@@ -1,21 +1,33 @@
+import 'dart:io';
+
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 
 class NotificationService {
   NotificationService._();
 
+  static bool _initialized = false;
+
   static final FlutterLocalNotificationsPlugin
   _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   static Future<void> init() async {
+    if(_initialized) return;
     tz.initializeTimeZones();
+    final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(currentTimeZone));
 
     const androidSettings = AndroidInitializationSettings(
       '@mipmap/ic_launcher',
     );
-    const iosSettings = DarwinInitializationSettings();
+    const iosSettings = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true
+    );
 
     const initSettings = InitializationSettings(
       android: androidSettings,
@@ -24,19 +36,24 @@ class NotificationService {
 
     await _flutterLocalNotificationsPlugin.initialize(initSettings);
 
-    if (await Permission.notification.isDenied) {
-      await Permission.notification.request();
-    }
-
-    await _flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin
-        >()
-        ?.requestPermissions(alert: true, badge: true, sound: true);
+    _initialized = true;
   }
 
   static void cancel(int id) async {
     await _flutterLocalNotificationsPlugin.cancel(id);
+  }
+
+  static NotificationDetails _notificationDetails(){
+    return const NotificationDetails(
+      android: AndroidNotificationDetails(
+        'todo_channel_id',
+        'todo notification',
+        channelDescription: 'Todo Notification Channel',
+        importance: Importance.max,
+        priority: Priority.high,
+      ),
+      iOS: DarwinNotificationDetails(),
+    );
   }
 
   static Future<void> scheduleNotification({
@@ -45,27 +62,16 @@ class NotificationService {
     required String body,
     required DateTime scheduledTime,
   }) async {
-    final tz.TZDateTime tzScheduled = tz.TZDateTime.from(
-      scheduledTime,
-      tz.local,
-    );
+
+    tz.TZDateTime  tzScheduled = tz.TZDateTime.from(scheduledTime, tz.local);
 
     await _flutterLocalNotificationsPlugin.zonedSchedule(
       id,
       title,
       body,
       tzScheduled,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'todo_channel4353eR3',
-          'todo channel',
-          channelDescription: 'todo todo',
-          importance: Importance.max,
-          priority: Priority.high,
-        ),
-        iOS: DarwinNotificationDetails(),
-      ),
-      androidScheduleMode: AndroidScheduleMode.inexact,
+      _notificationDetails(),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
     );
   }
 
@@ -78,15 +84,7 @@ class NotificationService {
       id,
       title,
       body,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'todo_channel4353eR3',
-          'todo channel',
-          channelDescription: 'todo todo',
-          importance: Importance.max,
-          priority: Priority.high,
-        ),
-      ),
+      _notificationDetails(),
     );
   }
 

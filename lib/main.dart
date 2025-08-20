@@ -10,7 +10,7 @@ void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   await EasyLocalization.ensureInitialized();
-  NotificationService.init();
+  await NotificationService.init();
 
   runApp(EasyLocalization( supportedLocales: [Locale('en')], path: 'assets/translations', fallbackLocale: Locale('en'), child: const MyApp(),));
 }
