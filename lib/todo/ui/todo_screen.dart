@@ -12,6 +12,7 @@ import 'package:todo_app/todo/ui/todo_showmodal.dart';
 import 'package:todo_app/todo/ui/todo_tile.dart';
 import 'package:todo_app/todo/viewmodel/todo_viewmodel.dart';
 import 'package:todo_app/weather/models/weather.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 
 import '../../core/ui/action_button.dart';
 import '../../core/ui/app_background.dart';
@@ -161,7 +162,10 @@ class _TodoScreenState extends State<TodoScreenWidget>
                     : "general.no_data".tr(),
                 style: AppTextStyle.bodyLarge,
               ),
-              Text("general.productive_day".tr(), style: AppTextStyle.captionBold),
+              Text(
+                "general.productive_day".tr(),
+                style: AppTextStyle.captionBold,
+              ),
             ],
           ),
         ],
@@ -177,8 +181,9 @@ class _TodoScreenState extends State<TodoScreenWidget>
       builder: (context, snapshot) {
         final Weather? weather = snapshot.data;
 
-        if (snapshot.hasError) {
+        if (snapshot.hasError && vm.isWeatherApiErrorShown == false) {
           vm.setMsg(Message.weatherApiUnavailable);
+          vm.setWeatherApiErrorAsShown(true);
         }
 
         if (weather != null) {
@@ -198,22 +203,24 @@ class _TodoScreenState extends State<TodoScreenWidget>
                     Text("${weather.temp}°C", style: AppTextStyle.bodyLarge),
                   ],
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "${"weather.feels_like".tr()}: ${weather.feelTemp}°C",
-                      style: AppTextStyle.captionRegular,
-                    ),
-                    Text(
-                      "${"weather.precipitation".tr()}: ${weather.rain} mm/h",
-                      style: AppTextStyle.captionRegular,
-                    ),
-                    Text(
-                      "${"weather.cloud_cover".tr()}: ${weather.clouds}%",
-                      style: AppTextStyle.captionRegular,
-                    ),
-                  ],
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AutoSizeText(
+                        "${"weather.feels_like".tr()}: ${weather.feelTemp}°C",
+                        style: AppTextStyle.captionRegular,
+                      ),
+                      AutoSizeText(
+                        "${"weather.precipitation".tr()}: ${weather.rain} mm/h",
+                        style: AppTextStyle.captionRegular,
+                      ),
+                      AutoSizeText(
+                        "${"weather.cloud_cover".tr()}: ${weather.clouds}%",
+                        style: AppTextStyle.captionRegular,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -244,7 +251,8 @@ class _TodoScreenState extends State<TodoScreenWidget>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (ctx) => TodoShowModal(todo: todo, vm: context.read<TodoViewModel>()),
+      builder: (ctx) =>
+          TodoShowModal(todo: todo, vm: context.read<TodoViewModel>()),
     );
   }
 

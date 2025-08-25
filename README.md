@@ -1,16 +1,37 @@
-# todo_app
+# Flutter ToDo App
 
-A new Flutter project.
+A simple **ToDo application built with Flutter**.  
+The app allows users to create, edit, and delete tasks. It also supports **local notifications** for reminders.  
+Additionally, the app includes a **Weather widget** that displays current weather data, powered by the [Weather API](https://www.weatherapi.com/).
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## ✨ Features
+- ✅ Add new tasks
+- ✏️ Edit existing tasks
+- ❌ Delete tasks
+- 🔔 Local notifications for task reminders
+- 🌦️ Weather widget with real-time weather data
 
-A few resources to get you started if this is your first Flutter project:
+---
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## 🚀 Getting Started
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Setup
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Nekio21/todo_app.git
+   cd todo_app
+2. Install dependencies:
+    ```bash
+   flutter pub get
+3. The `.env` file is already included with a placeholder key:
+   ```env
+   API_KEY=your_api_key_here
+   ```
+   You can leave it as is; the app will run with this placeholder.
+   To use the Weather widget with real data, replace your_api_key_here with your own API key.
+4. Run the app:
+   ```bash
+    flutter run
+   

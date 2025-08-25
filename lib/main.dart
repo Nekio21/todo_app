@@ -6,19 +6,25 @@ import 'package:todo_app/todo/ui/todo_screen.dart';
 import 'core/ui/app_theme.dart';
 import 'services/notification_service.dart';
 
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   await EasyLocalization.ensureInitialized();
   await NotificationService.init();
 
-  runApp(EasyLocalization( supportedLocales: [Locale('en')], path: 'assets/translations', fallbackLocale: Locale('en'), child: const MyApp(),));
+  runApp(
+    EasyLocalization(
+      supportedLocales: [Locale('en')],
+      path: 'assets/translations',
+      fallbackLocale: Locale('en'),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

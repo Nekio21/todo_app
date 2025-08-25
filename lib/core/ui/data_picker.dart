@@ -6,41 +6,51 @@ import 'app_text_style.dart';
 import 'app_theme.dart';
 
 class DataPicker extends FormField<DateTime?> {
-  DataPicker({super.key, super.validator, super.onSaved})
-    : super(
-        builder: (field) {
-          return InkWell(
-            onTap: () async {
-              final picked = await pickDateTime(field.context);
-              if (picked != null) {
-                field.didChange(picked);
-              }
-            },
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              spacing: AppSpacing.small,
-              children: [
-                Icon(
-                  Icons.calendar_month_outlined,
-                  size: 20,
-                  color: field.hasError ? AppTheme.error : AppTheme.onSurface,
-                ),
-                Text(
-                  field.value == null
-                      ? "todo.set_time".tr()
-                      : field.value.toString(),
-                  style: field.hasError
-                      ? AppTextStyle.captionBold.apply(color: AppTheme.error)
-                      : AppTextStyle.captionBold,
-                ),
-              ],
-            ),
-          );
-        },
-      );
+  DataPicker({
+    super.key,
+    required BuildContext context,
+    super.validator,
+    super.onSaved,
+  }) : super(
+         builder: (field) {
+           return InkWell(
+             onTap: () async {
+               final picked = await pickDateTime(context, field.context);
+               if (picked != null) {
+                 field.didChange(picked);
+               }
+             },
+             child: Row(
+               mainAxisSize: MainAxisSize.min,
+               spacing: AppSpacing.small,
+               children: [
+                 Icon(
+                   Icons.calendar_month_outlined,
+                   size: 20,
+                   color: field.hasError ? AppTheme.error : AppTheme.onSurface,
+                 ),
+                 Text(
+                   field.value == null
+                       ? "todo.set_time".tr()
+                       : DateFormat(
+                           'EEE, d MMM yyyy HH:mm',
+                         ).format(field.value ?? DateTime.now()),
+                   style: field.hasError
+                       ? AppTextStyle.captionBold.apply(color: AppTheme.error)
+                       : AppTextStyle.captionBold,
+                 ),
+               ],
+             ),
+           );
+         },
+       );
 
-  static Future<DateTime?> pickDateTime(BuildContext context) async {
+  static Future<DateTime?> pickDateTime(
+    BuildContext baseContext,
+    BuildContext context,
+  ) async {
     final now = DateTime.now();
+    FocusScope.of(baseContext).unfocus();
     final date = await showDatePicker(
       context: context,
       initialDate: now,

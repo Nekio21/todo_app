@@ -39,6 +39,9 @@ class TodoViewModel extends ChangeNotifier {
 
   Future<Weather?>? get weather => _weather;
 
+  bool _isWeatherApiErrorShown = false;
+  bool get isWeatherApiErrorShown => _isWeatherApiErrorShown;
+
   TodoViewModel();
 
   void init() async {
@@ -50,6 +53,7 @@ class TodoViewModel extends ChangeNotifier {
       _database = result;
     }
 
+    _isWeatherApiErrorShown = false;
     _weather = WeatherService.fetchWeather();
 
     countHowMany();
@@ -155,6 +159,11 @@ class TodoViewModel extends ChangeNotifier {
 
   void setLoading(bool loading) {
     _isLoading = loading;
+    notifyListeners();
+  }
+
+  void setWeatherApiErrorAsShown(bool isWeatherApiErrorShown) {
+    _isWeatherApiErrorShown  = isWeatherApiErrorShown;
     notifyListeners();
   }
 
